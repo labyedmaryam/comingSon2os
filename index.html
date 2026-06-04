@@ -86,20 +86,84 @@
     .nav-brand-green {
       color: #8fb01f;
     }
+    .nav-link {
+      color: #7a2035;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: color 0.25s ease;
+    }
+    .nav-link:hover {
+      color: #8fb01f;
+    }
     .nav-btn {
-      background: #8fb01f;
+      position: relative;
       color: #fff;
-      box-shadow: 0 4px 12px rgba(143, 176, 31, 0.35);
-      transition: background-color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+      background: linear-gradient(135deg, #8fb01f 0%, #6d8f18 100%);
+      box-shadow: 0 4px 14px rgba(143, 176, 31, 0.4);
+      overflow: hidden;
+      animation: navBtnGlow 2.2s ease-in-out infinite;
+    }
+    .nav-btn::after {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      top: 0;
+      left: -120%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(
+        105deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.45) 45%,
+        transparent 100%
+      );
+      animation: navBtnShine 2.8s ease-in-out infinite;
+      pointer-events: none;
     }
     .nav-btn:hover {
-      background: #7a9919;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(143, 176, 31, 0.45);
+      color: #fff;
+      filter: brightness(1.06);
+      transform: translateY(-1px);
     }
-    .nav-btn:active {
-      transform: translateY(0);
-      box-shadow: 0 3px 10px rgba(143, 176, 31, 0.35);
+    .nav-btn svg {
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes navBtnGlow {
+      0%,
+      100% {
+        box-shadow: 0 4px 14px rgba(143, 176, 31, 0.35);
+      }
+      50% {
+        box-shadow: 0 4px 22px rgba(143, 176, 31, 0.65), 0 0 28px rgba(143, 176, 31, 0.2);
+      }
+    }
+    @keyframes navBtnShine {
+      0%,
+      72%,
+      100% {
+        left: -120%;
+      }
+      38% {
+        left: 140%;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nav-btn,
+      .nav-btn::after {
+        animation: none;
+      }
+    }
+    .field-error {
+      font-size: 0.75rem;
+      line-height: 1.25;
+      color: #b91c1c;
+    }
+    .input-light.is-invalid {
+      border-color: #dc2626;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
     }
     .tag-expertise {
       border: 1px solid rgba(143, 176, 31, 0.22);
@@ -157,7 +221,7 @@
     <div class="page-overlay absolute inset-0"></div>
   </div>
 
-  <nav class="nav-bar w-full pt-0 pb-0" aria-label="Navigation principale">
+  <nav class="nav-bar relative z-10 w-full pt-0 pb-0" aria-label="Navigation principale">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 pt-0 pb-0 sm:px-6">
       <a href="index.html" class="flex min-w-0 items-center gap-3">
         <img
@@ -281,37 +345,45 @@
             <input type="text" name="_honey" class="hidden" tabindex="-1" autocomplete="off" />
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div class="flex flex-col gap-1.5">
+              <div class="flex flex-col gap-1.5" data-field="nom">
                 <label for="nom" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Nom</label>
-                <input type="text" id="nom" name="nom" required placeholder="Nom" autocomp  lete="family-name"
-                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base" />
+                <input type="text" id="nom" name="nom" required placeholder="Nom" autocomplete="family-name"
+                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"
+                  @input="$el.classList.remove('is-invalid'); $el.closest('[data-field]')?.querySelector('.field-error')?.classList.add('hidden')" />
+                <p class="field-error hidden" role="alert"></p>
               </div>
-              <div class="flex flex-col gap-1.5">
+              <div class="flex flex-col gap-1.5" data-field="prenom">
                 <label for="prenom" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Prénom</label>
                 <input type="text" id="prenom" name="prenom" required placeholder="Prénom" autocomplete="given-name"
-                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base" />
+                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"
+                  @input="$el.classList.remove('is-invalid'); $el.closest('[data-field]')?.querySelector('.field-error')?.classList.add('hidden')" />
+                <p class="field-error hidden" role="alert"></p>
               </div>
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div class="flex flex-col gap-1.5">
+              <div class="flex flex-col gap-1.5" data-field="email">
                 <label for="email" class="text-xs font-semibold uppercase tracking-wider text-slate-500">E-mail</label>
-                <input type="email" id="email" name="email" required placeholder="Mail" autocomplete="email"
-                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base" />
+                <input type="email" id="email" name="email" required placeholder="Votre mail" autocomplete="email"
+                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"
+                  @input="$el.classList.remove('is-invalid'); $el.closest('[data-field]')?.querySelector('.field-error')?.classList.add('hidden')" />
+                <p class="field-error hidden" role="alert"></p>
               </div>
-              <div class="flex flex-col gap-1.5">
-                <label for="tel" class="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Téléphone
-                </label>
-                <input type="tel" id="tel" name="telephone" placeholder="Téléphone" autocomplete="tel"
-                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base" />
+              <div class="flex flex-col gap-1.5" data-field="telephone">
+                <label for="tel" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Téléphone</label>
+                <input type="tel" id="tel" name="telephone" inputmode="numeric" placeholder="Votre tél" autocomplete="tel"
+                  class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"
+                  @input="$el.classList.remove('is-invalid'); $el.closest('[data-field]')?.querySelector('.field-error')?.classList.add('hidden')" />
+                <p class="field-error hidden" role="alert"></p>
               </div>
             </div>
 
-            <div class="flex flex-col gap-1.5">
+            <div class="flex flex-col gap-1.5" data-field="description">
               <label for="description" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Message</label>
               <textarea id="description" name="description" required rows="4" placeholder="Message"
-                class="input-light min-h-[96px] w-full resize-y rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"></textarea>
+                class="input-light min-h-[96px] w-full resize-y rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"
+                @input="$el.classList.remove('is-invalid'); $el.closest('[data-field]')?.querySelector('.field-error')?.classList.add('hidden')"></textarea>
+              <p class="field-error hidden" role="alert"></p>
             </div>
 
             <p
