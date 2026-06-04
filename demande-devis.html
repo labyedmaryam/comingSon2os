@@ -120,6 +120,9 @@
     .page-overlay {
       background: linear-gradient(180deg, rgba(248, 250, 244, 0.92) 0%, rgba(255, 255, 255, 0.85) 50%, rgba(244, 247, 238, 0.93) 100%);
     }
+    [x-cloak] {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="m-0 min-h-dvh overflow-x-hidden bg-brand-cream p-0 font-sans antialiased text-slate-700">
@@ -154,7 +157,7 @@
     </div>
   </nav>
 
-  <div class="relative z-10 mx-auto flex min-h-dvh max-w-7xl flex-col px-4 pt-0 pb-6 sm:px-6 sm:pb-8 md:px-8 lg:pb-10">
+  <div x-data="contactInfo" class="relative z-10 mx-auto flex min-h-dvh max-w-7xl flex-col px-4 pt-0 pb-6 sm:px-6 sm:pb-8 md:px-8 lg:pb-10">
 
     <main class="motion-safe:animate-fade-up mx-auto w-full max-w-3xl flex-1">
       <div class="mb-6 sm:mb-8">
@@ -167,8 +170,20 @@
         </p>
       </div>
 
-      <div class="card-light rounded-2xl p-5 sm:p-6 md:p-7">
-        <form id="devis-form" class="space-y-4" action="#" method="POST" novalidate>
+      <div
+        x-data="ajaxForm({
+          successMessage: 'Demande de devis envoyée. Merci — nous vous répondons sous 24 h.',
+          submitBusyLabel: 'Envoi en cours…'
+        })"
+        class="card-light rounded-2xl p-5 sm:p-6 md:p-7"
+      >
+        <form
+          id="devis-form"
+          class="space-y-4"
+          novalidate
+          @submit.prevent="onSubmit($event)"
+          @htmx:after-request="onHtmxAfterRequest($event)"
+        >
           <input type="hidden" name="_subject" value="Demande de devis — Omega Outsourcing Service" />
           <input type="hidden" name="_template" value="table" />
           <input type="hidden" name="_captcha" value="false" />
@@ -234,77 +249,41 @@
               class="input-light min-h-[120px] w-full resize-y rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"></textarea>
           </div>
 
-          <p id="feedback" class="hidden rounded-lg px-3 py-2.5 text-center text-sm" role="alert" aria-live="polite"></p>
+          <p
+            x-show="feedbackVisible"
+            x-cloak
+            :class="feedbackClass"
+            x-text="feedbackText"
+            role="alert"
+            aria-live="polite"
+            class="rounded-lg px-3 py-2.5 text-center text-sm"
+          ></p>
 
-          <button type="submit" id="btn-submit"
-            class="btn-brand flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition disabled:opacity-50 sm:text-base">
-            Demander un devis
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+          <button
+            type="submit"
+            id="btn-submit"
+            :disabled="submitting"
+            class="btn-brand flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition disabled:opacity-50 sm:text-base"
+          >
+            <span x-show="!submitting" class="inline-flex items-center justify-center gap-2">
+              Demander un devis
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </span>
+            <span x-show="submitting" x-cloak x-text="submitBusyLabel"></span>
           </button>
         </form>
       </div>
     </main>
 
     <footer class="mt-10 flex justify-center border-t border-brand-wine/10 pt-6 text-xs text-slate-500 sm:mt-12">
-      <span>&copy; <span id="year"></span> Omega Outsourcing Service</span>
+      <span>&copy; <span x-text="year"></span> Omega Outsourcing Service</span>
     </footer>
   </div>
 
-  <script>
-    const contact = JSON.parse(document.getElementById("contact-config").textContent);
-    document.getElementById("year").textContent = new Date().getFullYear();
-
-    const form = document.getElementById("devis-form");
-    const feedback = document.getElementById("feedback");
-    const btn = document.getElementById("btn-submit");
-    const btnDefaultHtml = btn.innerHTML;
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!form.checkValidity()) {
-        feedback.textContent = "Merci de compléter les champs obligatoires.";
-        feedback.className =
-          "block rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-center text-sm text-red-400";
-        form.reportValidity();
-        return;
-      }
-      if (form.querySelector('[name="_honey"]').value) return;
-
-      btn.disabled = true;
-      btn.textContent = "Envoi en cours…";
-
-      try {
-        if (location.protocol === "file:") {
-          throw new Error("local file");
-        }
-        const res = await fetch("https://formsubmit.co/ajax/" + contact.email, {
-          method: "POST",
-          headers: { Accept: "application/json" },
-          body: new FormData(form),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || (data.success !== "true" && data.success !== true)) throw new Error("submit failed");
-
-        feedback.textContent = "Demande de devis envoyée. Merci — nous vous répondons sous 24 h.";
-        feedback.className =
-          "block rounded-lg border border-brand-green/30 bg-brand-green-light px-3 py-2.5 text-center text-sm text-brand-green";
-        form.reset();
-      } catch (err) {
-        if (err.message === "local file") {
-          feedback.textContent = "Ouvrez le site avec Live Server (adresse http://), pas en double-cliquant le fichier HTML.";
-        } else {
-          feedback.textContent =
-            "Envoi impossible. Vérifiez votre connexion, activez le formulaire via l'e-mail FormSubmit, ou écrivez-nous à " + contact.email;
-        }
-        feedback.className =
-          "block rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-center text-sm text-red-400";
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = btnDefaultHtml;
-      }
-    });
-  </script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script src="assets/app.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </body>
 </html>

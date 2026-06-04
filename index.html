@@ -145,6 +145,9 @@
     .page-overlay {
       background: linear-gradient(180deg, rgba(248, 250, 244, 0.92) 0%, rgba(255, 255, 255, 0.85) 50%, rgba(244, 247, 238, 0.93) 100%);
     }
+    [x-cloak] {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="m-0 min-h-dvh overflow-x-hidden bg-brand-cream p-0 font-sans antialiased text-slate-700">
@@ -185,7 +188,7 @@
     </div>
   </nav>
 
-  <div class="relative z-10 mx-auto flex min-h-dvh max-w-7xl flex-col px-4 pt-0 pb-6 sm:px-6 sm:pb-8 md:px-8 lg:pb-10">
+  <div x-data="contactInfo" class="relative z-10 mx-auto flex min-h-dvh max-w-7xl flex-col px-4 pt-0 pb-6 sm:px-6 sm:pb-8 md:px-8 lg:pb-10">
 
     <main class="grid flex-1 grid-cols-1 items-start gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
 
@@ -227,8 +230,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
               </svg>
               <span>
-                <span id="contact-adresse" class="block font-medium text-slate-800"></span>
-                <span id="contact-ville" class="text-slate-500"></span>
+                <span x-text="adresse" class="block font-medium text-slate-800"></span>
+                <span x-text="ville" class="text-slate-500"></span>
               </span>
             </li>
             <li class="flex gap-3">
@@ -236,13 +239,13 @@
                 <rect x="3" y="5" width="18" height="14" rx="2" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9 6 9-6" />
               </svg>
-              <a id="contact-email" href="#" class="font-medium text-slate-700 hover:text-brand-green"></a>
+              <a :href="mailHref" x-text="email" class="font-medium text-slate-700 hover:text-brand-green"></a>
             </li>
             <li class="flex gap-3">
               <svg class="mt-0.5 h-4 w-4 shrink-0 text-brand-green" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.62a2 2 0 0 1-.45 2.11L8 9.85a16 16 0 0 0 6.15 6.15l1.4-1.28a2 2 0 0 1 2.11-.45c.84.29 1.72.5 2.62.62A2 2 0 0 1 22 16.92z" />
               </svg>
-              <a id="contact-telephone" href="#" class="font-medium text-slate-700 hover:text-brand-green"></a>
+              <a :href="phoneHref(telephone)" x-text="telephone" class="font-medium text-slate-700 hover:text-brand-green"></a>
             </li>
             <!-- <li class="flex gap-3">
               <svg class="mt-0.5 h-4 w-4 shrink-0 text-brand-green" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
@@ -254,14 +257,24 @@
         </div>
       </section>
 
-      <aside class="motion-safe:animate-fade-up w-full lg:max-w-md lg:justify-self-end xl:max-w-lg" style="animation-delay: 0.1s">
+      <aside
+        x-data="ajaxForm()"
+        class="motion-safe:animate-fade-up w-full lg:max-w-md lg:justify-self-end xl:max-w-lg"
+        style="animation-delay: 0.1s"
+      >
         <div class="card-light rounded-2xl p-5 sm:p-6 md:p-7">
           <div class="mb-5 sm:mb-6">
             <h2 class="text-xl font-bold text-brand-wine sm:text-2xl">Nous contacter</h2>
             <p class="mt-1 text-sm text-slate-500">Décrivez votre projet — réponse sous 24 heures.</p>
           </div>
 
-          <form id="contact-form" class="space-y-4" action="#" method="POST" novalidate>
+          <form
+            id="contact-form"
+            class="space-y-4"
+            novalidate
+            @submit.prevent="onSubmit($event)"
+            @htmx:after-request="onHtmxAfterRequest($event)"
+          >
             <input type="hidden" name="_subject" value="Contact — Bureau d'étude" />
             <input type="hidden" name="_template" value="table" />
             <input type="hidden" name="_captcha" value="false" />
@@ -270,7 +283,7 @@
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div class="flex flex-col gap-1.5">
                 <label for="nom" class="text-xs font-semibold uppercase tracking-wider text-slate-500">Nom</label>
-                <input type="text" id="nom" name="nom" required placeholder="Nom" autocomplete="family-name"
+                <input type="text" id="nom" name="nom" required placeholder="Nom" autocomp  lete="family-name"
                   class="input-light w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base" />
               </div>
               <div class="flex flex-col gap-1.5">
@@ -301,14 +314,29 @@
                 class="input-light min-h-[96px] w-full resize-y rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 sm:text-base"></textarea>
             </div>
 
-            <p id="feedback" class="hidden rounded-lg px-3 py-2.5 text-center text-sm" role="alert" aria-live="polite"></p>
+            <p
+              x-show="feedbackVisible"
+              x-cloak
+              :class="feedbackClass"
+              x-text="feedbackText"
+              role="alert"
+              aria-live="polite"
+              class="rounded-lg px-3 py-2.5 text-center text-sm"
+            ></p>
 
-            <button type="submit" id="btn-submit"
-              class="btn-brand flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition disabled:opacity-50 sm:text-base">
-              Envoyer
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
+            <button
+              type="submit"
+              id="btn-submit"
+              :disabled="submitting"
+              class="btn-brand flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition disabled:opacity-50 sm:text-base"
+            >
+              <span x-show="!submitting" class="inline-flex items-center justify-center gap-2">
+                Envoyer
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </span>
+              <span x-show="submitting" x-cloak x-text="submitBusyLabel"></span>
             </button>
           </form>
         </div>
@@ -316,75 +344,12 @@
     </main>
 
     <footer class="mt-10 flex justify-center border-t border-brand-wine/10 pt-6 text-xs text-slate-500 sm:mt-12">
-      <span>&copy; <span id="year"></span> Omega Outsourcing Service</span>
+      <span>&copy; <span x-text="year"></span> Omega Outsourcing Service</span>
     </footer>
   </div>
 
-  <script>
-    const contact = JSON.parse(document.getElementById("contact-config").textContent);
-    const formEmail = contact.formEmail || contact.email;
-    document.getElementById("contact-adresse").textContent = contact.adresse;
-    document.getElementById("contact-ville").textContent = contact.ville;
-    document.getElementById("contact-email").textContent = contact.email;
-    document.getElementById("contact-email").href = "mailto:" + contact.email;
-    document.getElementById("contact-telephone").textContent = contact.telephone;
-    document.getElementById("contact-telephone").href = "tel:" + contact.telephone.replace(/\s/g, "");
-    const tel2 = document.getElementById("contact-telephone-2");
-    if (tel2 && contact.telephone2) {
-      tel2.textContent = contact.telephone2;
-      tel2.href = "tel:" + contact.telephone2.replace(/\s/g, "");
-    }
-    document.getElementById("year").textContent = new Date().getFullYear();
-
-    const form = document.getElementById("contact-form");
-    const feedback = document.getElementById("feedback");
-    const btn = document.getElementById("btn-submit");
-    const btnDefaultHtml = btn.innerHTML;
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!form.checkValidity()) {
-        feedback.textContent = "Merci de compléter les champs obligatoires.";
-        feedback.className =
-          "block rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-center text-sm text-red-400";
-        form.reportValidity();
-        return;
-      }
-      if (form.querySelector('[name="_honey"]').value) return;
-
-      btn.disabled = true;
-      btn.textContent = "Envoi…";
-
-      try {
-        if (location.protocol === "file:") {
-          throw new Error("local file");
-        }
-        const res = await fetch("https://formsubmit.co/ajax/" + formEmail, {
-          method: "POST",
-          headers: { Accept: "application/json" },
-          body: new FormData(form),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || (data.success !== "true" && data.success !== true)) throw new Error("submit failed");
-
-        feedback.textContent = "Message envoyé. Merci — nous revenons vers vous rapidement.";
-        feedback.className =
-          "block rounded-lg border border-brand-green/30 bg-brand-green-light px-3 py-2.5 text-center text-sm text-brand-green";
-        form.reset();
-      } catch (err) {
-        if (err.message === "local file") {
-          feedback.textContent = "Ouvrez le site avec Live Server (adresse http://), pas en double-cliquant le fichier HTML.";
-        } else {
-          feedback.textContent =
-            "Envoi impossible. Vérifiez votre connexion, activez le formulaire via l'e-mail FormSubmit, ou écrivez-nous à " + contact.email;
-        }
-        feedback.className =
-          "block rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-center text-sm text-red-400";
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = btnDefaultHtml;
-      }
-    });
-  </script>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <script src="assets/app.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
 </body>
 </html>
